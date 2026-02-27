@@ -21,6 +21,9 @@ ingress:
   frontendHost: byteorder.local
   adminHost: byteorder-admin.local
   # className: nginx
+  tls:
+    enabled: false
+    clusterIssuer: letsencrypt-prod
 
 services:
   frontend:
