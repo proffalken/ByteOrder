@@ -1,0 +1,27 @@
+registry: ghcr.io/proffalken/byteorder
+imageTag: latest
+
+postgres:
+  password: byteorder-change-me
+  storageSize: 2Gi
+
+jwtSecret: change-me-in-production
+adminDefaultPassword: byteorder
+
+otelEndpoint: ""
+
+ingress:
+  enabled: true
+  frontendHost: byteorder.local
+  adminHost: byteorder-admin.local
+  # className: nginx
+
+services:
+  frontend:
+    port: 80
+  admin:
+    port: 3001
+  menuService:
+    port: 8000
+  orderService:
+    port: 8001

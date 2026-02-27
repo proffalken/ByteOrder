@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: byteorder-postgres
+type: Opaque
+stringData:
+  password: {{ .Values.postgres.password | quote }}
+  url: "postgresql://byteorder:{{ .Values.postgres.password }}@byteorder-postgres:5432/byteorder"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: byteorder-postgres
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: {{ .Values.postgres.storageSize }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: byteorder-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: byteorder-postgres
+  template:
+    metadata:
+      labels:
+        app: byteorder-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_DB
+              value: byteorder
+            - name: POSTGRES_USER
+              value: byteorder
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: byteorder-postgres
+                  key: password
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "byteorder"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: byteorder-postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: byteorder-postgres
+spec:
+  selector:
+    app: byteorder-postgres
+  ports:
+    - port: 5432

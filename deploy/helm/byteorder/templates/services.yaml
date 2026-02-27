@@ -1,0 +1,86 @@
+{{- $services := list "menu-service" "order-service" "print-service" "admin" "frontend" }}
+{{- range $svc := $services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: byteorder-{{ $svc }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: byteorder-{{ $svc }}
+  template:
+    metadata:
+      labels:
+        app: byteorder-{{ $svc }}
+    spec:
+      containers:
+        - name: {{ $svc }}
+          image: {{ $.Values.registry }}/{{ $svc }}:{{ $.Values.imageTag }}
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: byteorder-postgres
+                  key: url
+            {{- if ne $svc "frontend" }}
+            - name: REDIS_URL
+              value: redis://byteorder-redis:6379
+            - name: OTEL_ENDPOINT
+              value: {{ $.Values.otelEndpoint | quote }}
+            {{- end }}
+            {{- if eq $svc "admin" }}
+            - name: MENU_SERVICE_URL
+              value: http://byteorder-menu-service:8000
+            - name: ORDER_SERVICE_URL
+              value: http://byteorder-order-service:8001
+            - name: JWT_SECRET
+              value: {{ $.Values.jwtSecret | quote }}
+            - name: ADMIN_DEFAULT_PASSWORD
+              value: {{ $.Values.adminDefaultPassword | quote }}
+            {{- end }}
+{{- end }}
+
+{{- /* Services (k8s Service objects) */ -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: byteorder-menu-service
+spec:
+  selector:
+    app: byteorder-menu-service
+  ports:
+    - port: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: byteorder-order-service
+spec:
+  selector:
+    app: byteorder-order-service
+  ports:
+    - port: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: byteorder-admin
+spec:
+  selector:
+    app: byteorder-admin
+  ports:
+    - port: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: byteorder-frontend
+spec:
+  selector:
+    app: byteorder-frontend
+  ports:
+    - port: 80

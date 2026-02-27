@@ -1,0 +1,16 @@
+# Copy this to docker-compose.override.yml and fill in your values
+version: "3.9"
+services:
+  menu-service:
+    environment:
+      OTEL_ENDPOINT: "https://ingress.eu-west-1.aws.dash0.com:4317"
+  order-service:
+    environment:
+      OTEL_ENDPOINT: "https://ingress.eu-west-1.aws.dash0.com:4317"
+  print-service:
+    environment:
+      OTEL_ENDPOINT: "https://ingress.eu-west-1.aws.dash0.com:4317"
+  admin:
+    environment:
+      JWT_SECRET: "your-strong-secret-here"
+      ADMIN_DEFAULT_PASSWORD: "your-admin-password"

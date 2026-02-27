@@ -1,0 +1,89 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: byteorder
+      POSTGRES_USER: byteorder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-byteorder}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U byteorder"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  menu-service:
+    image: ghcr.io/proffalken/byteorder/menu-service:latest
+    environment:
+      DATABASE_URL: postgresql://byteorder:${POSTGRES_PASSWORD:-byteorder}@postgres:5432/byteorder
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  order-service:
+    image: ghcr.io/proffalken/byteorder/order-service:latest
+    environment:
+      DATABASE_URL: postgresql://byteorder:${POSTGRES_PASSWORD:-byteorder}@postgres:5432/byteorder
+      REDIS_URL: redis://redis:6379
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+
+  print-service:
+    image: ghcr.io/proffalken/byteorder/print-service:latest
+    environment:
+      DATABASE_URL: postgresql://byteorder:${POSTGRES_PASSWORD:-byteorder}@postgres:5432/byteorder
+      REDIS_URL: redis://redis:6379
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      menu-service:
+        condition: service_started
+
+  admin:
+    image: ghcr.io/proffalken/byteorder/admin:latest
+    environment:
+      DATABASE_URL: postgresql://byteorder:${POSTGRES_PASSWORD:-byteorder}@postgres:5432/byteorder
+      MENU_SERVICE_URL: http://menu-service:8000
+      ORDER_SERVICE_URL: http://order-service:8001
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD:-byteorder}
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-}
+    depends_on:
+      - menu-service
+      - order-service
+    ports:
+      - "3001:3001"
+
+  frontend:
+    image: ghcr.io/proffalken/byteorder/frontend:latest
+    depends_on:
+      - menu-service
+      - order-service
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:

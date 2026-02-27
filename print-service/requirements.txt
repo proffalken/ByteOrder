@@ -1,0 +1,7 @@
+redis==5.1.0
+requests==2.32.3
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.35
+pydantic-settings==2.5.2
+opentelemetry-sdk==1.27.0
+opentelemetry-exporter-otlp==1.27.0
