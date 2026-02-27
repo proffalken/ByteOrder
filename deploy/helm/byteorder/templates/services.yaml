@@ -23,8 +23,13 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
+                  {{- if $.Values.postgres.enabled }}
                   name: byteorder-postgres
                   key: url
+                  {{- else }}
+                  name: {{ $.Values.postgres.existingSecret }}
+                  key: {{ $.Values.postgres.existingSecretKey }}
+                  {{- end }}
             {{- if ne $svc "frontend" }}
             - name: REDIS_URL
               value: redis://byteorder-redis:6379

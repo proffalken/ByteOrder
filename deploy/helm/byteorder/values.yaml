@@ -2,8 +2,14 @@ registry: ghcr.io/proffalken/byteorder
 imageTag: latest
 
 postgres:
+  enabled: true          # set false to use an external PostgreSQL cluster
   password: byteorder-change-me
   storageSize: 2Gi
+  # When enabled: false, provide the name of an existing Secret that contains
+  # a full DSN (postgresql://user:pass@host:5432/db).
+  # CloudNativePG creates <cluster-name>-app with key "uri" automatically.
+  existingSecret: ""
+  existingSecretKey: "uri"
 
 jwtSecret: change-me-in-production
 adminDefaultPassword: byteorder
