@@ -1,9 +1,11 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
-RUN npm run build
+RUN ARCH=$(node -p process.arch) && \
+    ESBUILD_BINARY_PATH="/app/node_modules/@esbuild/linux-${ARCH}/bin/esbuild" \
+    npm run build
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
