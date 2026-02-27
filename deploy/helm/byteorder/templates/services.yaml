@@ -46,7 +46,7 @@ spec:
             - name: ADMIN_DEFAULT_PASSWORD
               value: {{ $.Values.adminDefaultPassword | quote }}
             {{- end }}
-{{- end }}
+{{ end }}
 
 {{- /* Services (k8s Service objects) */ -}}
 ---
