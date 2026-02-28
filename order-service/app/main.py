@@ -6,7 +6,8 @@ from app.config import settings
 from app.database import engine, Base
 from app.routers import orders
 
-if settings.otel_endpoint:
+_otel_exporter_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
+if _otel_exporter_endpoint or settings.otel_endpoint:
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -15,7 +16,7 @@ if settings.otel_endpoint:
 
     resource = Resource.create({"service.name": settings.otel_service_name})
     provider = TracerProvider(resource=resource)
-    if os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
+    if _otel_exporter_endpoint:
         exporter = OTLPSpanExporter()
     else:
         exporter = OTLPSpanExporter(endpoint=f"{settings.otel_endpoint}/v1/traces")
@@ -40,7 +41,7 @@ app.add_middleware(
 
 app.include_router(orders.router)
 
-if settings.otel_endpoint:
+if _otel_exporter_endpoint or settings.otel_endpoint:
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     FastAPIInstrumentor.instrument_app(app)
 

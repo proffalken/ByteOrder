@@ -7,7 +7,8 @@ from app.database import engine, Base
 from app.routers import categories, items, ingredients, settings as settings_router
 
 # OpenTelemetry setup
-if settings.otel_endpoint:
+_otel_exporter_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
+if _otel_exporter_endpoint or settings.otel_endpoint:
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -19,7 +20,7 @@ if settings.otel_endpoint:
     provider = TracerProvider(resource=resource)
     # Prefer the standard env var (injected by Dash0); fall back to OTEL_ENDPOINT for
     # non-Dash0 deployments, appending /v1/traces as required by HTTP OTLP.
-    if os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
+    if _otel_exporter_endpoint:
         exporter = OTLPSpanExporter()
     else:
         exporter = OTLPSpanExporter(endpoint=f"{settings.otel_endpoint}/v1/traces")
@@ -47,7 +48,7 @@ app.include_router(items.router)
 app.include_router(ingredients.router)
 app.include_router(settings_router.router)
 
-if settings.otel_endpoint:
+if _otel_exporter_endpoint or settings.otel_endpoint:
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     FastAPIInstrumentor.instrument_app(app)
 
