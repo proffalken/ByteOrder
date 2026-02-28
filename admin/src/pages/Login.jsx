@@ -25,9 +25,9 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">ByteOrder</h1>
+    <div className="min-h-screen bg-brand-bg flex items-center justify-center">
+      <div className="bg-brand-surface rounded-xl shadow-lg p-8 w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-brand-text mb-1">ByteOrder</h1>
         <p className="text-gray-500 text-sm mb-6">Admin sign in</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">

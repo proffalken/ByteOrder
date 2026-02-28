@@ -14,9 +14,14 @@ export default function Layout() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/settings/brand_primary').then(({ data }) => {
-      if (data.value) document.documentElement.style.setProperty('--brand-primary', data.value)
-    }).catch(() => {})
+    const apply = (key, prop) =>
+      api.get(`/settings/${key}`).then(({ data }) => {
+        if (data.value) document.documentElement.style.setProperty(prop, data.value)
+      }).catch(() => {})
+    apply('brand_primary', '--brand-primary')
+    apply('brand_bg',      '--brand-bg')
+    apply('brand_surface', '--brand-surface')
+    apply('brand_text',    '--brand-text')
   }, [])
 
   function logout() {
@@ -25,7 +30,7 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-brand-bg flex flex-col">
       <header className="bg-brand-600 text-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <span className="text-xl font-bold tracking-tight">ByteOrder Admin</span>

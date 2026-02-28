@@ -10,6 +10,9 @@ export default function Settings() {
   const [frontendUrl, setFrontendUrl] = useState('')
   const [logo, setLogo] = useState('')
   const [brandPrimary, setBrandPrimary] = useState('#ea580c')
+  const [brandBg, setBrandBg] = useState('#f9fafb')
+  const [brandSurface, setBrandSurface] = useState('#ffffff')
+  const [brandText, setBrandText] = useState('#111827')
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [saved, setSaved] = useState('')
@@ -26,12 +29,36 @@ export default function Settings() {
       const colour = map.brand_primary || '#ea580c'
       setBrandPrimary(colour)
       document.documentElement.style.setProperty('--brand-primary', colour)
+      const bg = map.brand_bg || '#f9fafb'
+      setBrandBg(bg)
+      document.documentElement.style.setProperty('--brand-bg', bg)
+      const surface = map.brand_surface || '#ffffff'
+      setBrandSurface(surface)
+      document.documentElement.style.setProperty('--brand-surface', surface)
+      const text = map.brand_text || '#111827'
+      setBrandText(text)
+      document.documentElement.style.setProperty('--brand-text', text)
     })
   }, [])
 
   function handleBrandColour(hex) {
     setBrandPrimary(hex)
     document.documentElement.style.setProperty('--brand-primary', hex)
+  }
+
+  function handleBrandBg(hex) {
+    setBrandBg(hex)
+    document.documentElement.style.setProperty('--brand-bg', hex)
+  }
+
+  function handleBrandSurface(hex) {
+    setBrandSurface(hex)
+    document.documentElement.style.setProperty('--brand-surface', hex)
+  }
+
+  function handleBrandText(hex) {
+    setBrandText(hex)
+    document.documentElement.style.setProperty('--brand-text', hex)
   }
 
   function handleLogoFile(e) {
@@ -63,6 +90,9 @@ export default function Settings() {
         api.put('/settings/frontend_url',  { value: frontendUrl }),
         api.put('/settings/logo',          { value: logo }),
         api.put('/settings/brand_primary', { value: brandPrimary }),
+        api.put('/settings/brand_bg',      { value: brandBg }),
+        api.put('/settings/brand_surface', { value: brandSurface }),
+        api.put('/settings/brand_text',    { value: brandText }),
       ])
       setSaved('Settings saved.')
     } catch {
@@ -89,12 +119,12 @@ export default function Settings() {
 
   return (
     <div className="max-w-lg space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+      <h1 className="text-2xl font-bold text-brand-text">Settings</h1>
 
       {saved && <p className="text-green-600 text-sm">{saved}</p>}
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      <form onSubmit={saveSettings} className="bg-white rounded-xl shadow p-6 space-y-4">
+      <form onSubmit={saveSettings} className="bg-brand-surface rounded-xl shadow p-6 space-y-4">
         <h2 className="text-lg font-semibold text-gray-800">Kitchen Settings</h2>
 
         <div>
@@ -151,6 +181,69 @@ export default function Settings() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Background Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={brandBg}
+              onChange={e => handleBrandBg(e.target.value)}
+              className="h-10 w-16 rounded border cursor-pointer p-0.5"
+            />
+            <span className="text-sm font-mono text-gray-600">{brandBg}</span>
+            <button
+              type="button"
+              onClick={() => handleBrandBg('#f9fafb')}
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
+            >
+              Reset to default
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Page background colour</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Surface Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={brandSurface}
+              onChange={e => handleBrandSurface(e.target.value)}
+              className="h-10 w-16 rounded border cursor-pointer p-0.5"
+            />
+            <span className="text-sm font-mono text-gray-600">{brandSurface}</span>
+            <button
+              type="button"
+              onClick={() => handleBrandSurface('#ffffff')}
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
+            >
+              Reset to default
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Card and panel backgrounds</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Text Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={brandText}
+              onChange={e => handleBrandText(e.target.value)}
+              className="h-10 w-16 rounded border cursor-pointer p-0.5"
+            />
+            <span className="text-sm font-mono text-gray-600">{brandText}</span>
+            <button
+              type="button"
+              onClick={() => handleBrandText('#111827')}
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
+            >
+              Reset to default
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Primary heading and body text</p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Kitchen Logo</label>
           {logo ? (
             <div className="flex items-center gap-4 mb-2">
@@ -177,7 +270,7 @@ export default function Settings() {
         </button>
       </form>
 
-      <form onSubmit={changePassword} className="bg-white rounded-xl shadow p-6 space-y-4">
+      <form onSubmit={changePassword} className="bg-brand-surface rounded-xl shadow p-6 space-y-4">
         <h2 className="text-lg font-semibold text-gray-800">Change Password</h2>
 
         <div>

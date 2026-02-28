@@ -61,7 +61,7 @@ export default function TrackOrder() {
   const currentStep = STATUS_STEPS.indexOf(status)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-brand-bg">
       <header className="bg-brand-600 text-white px-4 py-4">
         <Link to="/" className="text-white text-xl">←</Link>
         <span className="text-xl font-bold ml-3">Track Order</span>
@@ -70,7 +70,7 @@ export default function TrackOrder() {
       <div className="max-w-lg mx-auto px-4 py-8">
         {!orderId ? (
           <form onSubmit={handleLookup}>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Find your order</h2>
+            <h2 className="text-2xl font-bold text-brand-text mb-6">Find your order</h2>
             <input
               value={lookupId}
               onChange={e => setLookupId(e.target.value)}
@@ -98,14 +98,14 @@ export default function TrackOrder() {
           </div>
         ) : (
           <div>
-            <div className="bg-white rounded-2xl shadow p-6 mb-6 text-center">
+            <div className="bg-brand-surface rounded-2xl shadow p-6 mb-6 text-center">
               <p className="text-5xl mb-3">{STATUS_EMOJI[status] || '📋'}</p>
-              <p className="text-2xl font-extrabold text-gray-900">{order.order_number}</p>
+              <p className="text-2xl font-extrabold text-brand-text">{order.order_number}</p>
               <p className="text-gray-500 text-lg">{order.customer_name}</p>
             </div>
 
             {/* Progress bar */}
-            <div className="bg-white rounded-2xl shadow p-6 mb-6">
+            <div className="bg-brand-surface rounded-2xl shadow p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 {STATUS_STEPS.map((s, i) => (
                   <div key={s} className="flex flex-col items-center flex-1">
@@ -138,12 +138,12 @@ export default function TrackOrder() {
             </div>
 
             {/* Order summary */}
-            <div className="bg-white rounded-2xl shadow p-6">
+            <div className="bg-brand-surface rounded-2xl shadow p-6">
               <h3 className="font-bold text-gray-700 mb-3">Your order</h3>
               <div className="space-y-2">
                 {order.items.map(item => (
                   <div key={item.id} className="text-sm">
-                    <p className="font-medium text-gray-900">{item.menu_item_name}</p>
+                    <p className="font-medium text-brand-text">{item.menu_item_name}</p>
                     {item.ingredients.filter(i => i.included).length > 0 && (
                       <p className="text-gray-500">
                         With: {item.ingredients.filter(i => i.included).map(i => i.ingredient_name).join(', ')}

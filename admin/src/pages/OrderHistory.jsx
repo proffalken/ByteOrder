@@ -27,7 +27,7 @@ export default function OrderHistory() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Order History</h1>
+        <h1 className="text-2xl font-bold text-brand-text">Order History</h1>
         <input
           type="date"
           value={date}
@@ -44,10 +44,10 @@ export default function OrderHistory() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {orders.map(order => (
-          <div key={order.id} className="bg-white rounded-xl shadow p-4 flex flex-col gap-3">
+          <div key={order.id} className="bg-brand-surface rounded-xl shadow p-4 flex flex-col gap-3">
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-bold text-lg text-gray-900">{order.order_number}</p>
+                <p className="font-bold text-lg text-brand-text">{order.order_number}</p>
                 <p className="text-gray-600">{order.customer_name}</p>
               </div>
               <span className="text-xs text-gray-400">

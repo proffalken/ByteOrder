@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Brand colour tokens — override --brand-primary at runtime to retheme everything */
+/* Brand colour tokens — override at runtime to retheme everything */
 :root {
   --brand-primary: #ea580c;
   --brand-50:  color-mix(in srgb, var(--brand-primary)  8%, white);
@@ -14,6 +14,11 @@
   --brand-600: var(--brand-primary);
   --brand-700: color-mix(in srgb, var(--brand-primary) 82%, black);
   --brand-800: color-mix(in srgb, var(--brand-primary) 60%, black);
+
+  /* Page / surface / body text */
+  --brand-bg:      #f9fafb;  /* default: Tailwind gray-50  */
+  --brand-surface: #ffffff;  /* default: white             */
+  --brand-text:    #111827;  /* default: Tailwind gray-900 */
 }
 
 @layer utilities {
@@ -44,4 +49,8 @@
   .file\:bg-brand-50::file-selector-button   { background-color: var(--brand-50);  }
   .file\:text-brand-700::file-selector-button { color: var(--brand-700); }
   .hover\:file\:bg-brand-100:hover::file-selector-button { background-color: var(--brand-100); }
+
+  .bg-brand-bg      { background-color: var(--brand-bg); }
+  .bg-brand-surface { background-color: var(--brand-surface); }
+  .text-brand-text  { color: var(--brand-text); }
 }

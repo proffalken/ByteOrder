@@ -50,7 +50,7 @@ export default function OrderQueue() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Order Queue</h1>
+        <h1 className="text-2xl font-bold text-brand-text">Order Queue</h1>
         <button onClick={fetchQueue} className="text-sm text-brand-600 hover:underline">Refresh</button>
       </div>
 
@@ -60,10 +60,10 @@ export default function OrderQueue() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {orders.map(order => (
-          <div key={order.id} className="bg-white rounded-xl shadow p-4 flex flex-col gap-3">
+          <div key={order.id} className="bg-brand-surface rounded-xl shadow p-4 flex flex-col gap-3">
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-bold text-lg text-gray-900">{order.order_number}</p>
+                <p className="font-bold text-lg text-brand-text">{order.order_number}</p>
                 <p className="text-gray-600">{order.customer_name}</p>
               </div>
               <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLOURS[order.status]}`}>

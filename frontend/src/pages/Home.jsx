@@ -65,7 +65,7 @@ export default function Home() {
       }
       <p className="text-gray-500 mb-10 text-lg">Scan to order from your phone</p>
 
-      <div className="bg-white rounded-2xl shadow-xl p-6 mb-10">
+      <div className="bg-brand-surface rounded-2xl shadow-xl p-6 mb-10">
         {orderUrl ? (
           <QRCodeSVG value={orderUrl} size={220} fgColor={brandColor} />
         ) : (
@@ -83,9 +83,9 @@ export default function Home() {
         ) : (
           <div className="space-y-2">
             {queue.map(order => (
-              <div key={order.id} className="bg-white rounded-xl shadow px-4 py-3 flex items-center justify-between">
+              <div key={order.id} className="bg-brand-surface rounded-xl shadow px-4 py-3 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-gray-900">{order.order_number}</span>
+                  <span className="font-bold text-brand-text">{order.order_number}</span>
                   <span className="text-gray-500 ml-2">{order.customer_name}</span>
                 </div>
                 <span className={`text-white text-xs font-semibold px-3 py-1 rounded-full ${STATUS_COLOURS[order.status] || 'bg-gray-400'}`}>

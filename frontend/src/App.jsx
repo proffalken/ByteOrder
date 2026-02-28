@@ -7,9 +7,14 @@ import TrackOrder from './pages/TrackOrder'
 
 export default function App() {
   useEffect(() => {
-    menuApi.get('/settings/brand_primary').then(({ data }) => {
-      if (data.value) document.documentElement.style.setProperty('--brand-primary', data.value)
-    }).catch(() => {})
+    const apply = (key, prop) =>
+      menuApi.get(`/settings/${key}`).then(({ data }) => {
+        if (data.value) document.documentElement.style.setProperty(prop, data.value)
+      }).catch(() => {})
+    apply('brand_primary', '--brand-primary')
+    apply('brand_bg',      '--brand-bg')
+    apply('brand_surface', '--brand-surface')
+    apply('brand_text',    '--brand-text')
   }, [])
 
   return (

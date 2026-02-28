@@ -219,7 +219,7 @@ export default function MenuManagement() {
     <div className="flex gap-6 h-full">
       {/* Categories panel */}
       <div className="w-56 shrink-0">
-        <h2 className="text-lg font-bold text-gray-900 mb-3">Categories</h2>
+        <h2 className="text-lg font-bold text-brand-text mb-3">Categories</h2>
         <div className="space-y-1 mb-4">
           {categories.map(cat => (
             <div
@@ -259,10 +259,10 @@ export default function MenuManagement() {
           <p className="text-gray-400 mt-8 text-center">Select a category</p>
         ) : (
           <>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">{selected.name} — Items</h2>
+            <h2 className="text-lg font-bold text-brand-text mb-3">{selected.name} — Items</h2>
             <div className="space-y-3 mb-6">
               {selected.items?.map(item => (
-                <div key={item.id} className="bg-white rounded-lg shadow p-4">
+                <div key={item.id} className="bg-brand-surface rounded-lg shadow p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <span className={`font-medium ${!item.active ? 'line-through text-gray-400' : ''}`}>
@@ -326,7 +326,7 @@ export default function MenuManagement() {
               ))}
             </div>
 
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-brand-surface rounded-lg shadow p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Add item to {selected.name}</h3>
               <div className="flex gap-2">
                 <input
