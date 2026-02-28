@@ -69,6 +69,7 @@ export default function Settings() {
       e.target.value = ''
       return
     }
+    setError('')
     const reader = new FileReader()
     reader.onload = ev => setLogo(ev.target.result)
     reader.readAsDataURL(file)

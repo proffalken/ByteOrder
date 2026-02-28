@@ -148,8 +148,8 @@ def get_history(date: str | None = None, db: Session = Depends(get_db)):
     if date:
         try:
             d = datetime.strptime(date, "%Y-%m-%d").date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Use YYYY-MM-DD")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail="Use YYYY-MM-DD") from e
         q = q.filter(func.date(models.Order.created_at) == d)
     else:
         q = q.filter(func.date(models.Order.created_at) == datetime.utcnow().date())
