@@ -32,9 +32,9 @@ export default function Ingredients() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Ingredients</h1>
+      <h1 className="text-2xl font-bold text-brand-text mb-4">Ingredients</h1>
 
-      <div className="bg-white rounded-xl shadow divide-y">
+      <div className="bg-brand-surface rounded-xl shadow divide-y">
         {ingredients.map(ing => (
           <div key={ing.id} className="flex items-center justify-between px-4 py-3">
             <span className={`font-medium ${!ing.active ? 'line-through text-gray-400' : 'text-gray-800'}`}>
@@ -65,7 +65,7 @@ export default function Ingredients() {
         />
         <button
           onClick={add}
-          className="bg-orange-600 hover:bg-orange-700 text-white rounded-lg px-4 py-2 font-medium"
+          className="bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 font-medium"
         >
           Add
         </button>

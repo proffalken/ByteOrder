@@ -1,3 +1,4 @@
+{{- if .Values.postgres.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -66,3 +67,4 @@ spec:
     app: byteorder-postgres
   ports:
     - port: 5432
+{{- end }}

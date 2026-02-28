@@ -23,8 +23,13 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
+                  {{- if $.Values.postgres.enabled }}
                   name: byteorder-postgres
                   key: url
+                  {{- else }}
+                  name: {{ required "postgres.existingSecret is required when postgres.enabled is false" $.Values.postgres.existingSecret }}
+                  key: {{ required "postgres.existingSecretKey is required when postgres.enabled is false" $.Values.postgres.existingSecretKey }}
+                  {{- end }}
             {{- if ne $svc "frontend" }}
             - name: REDIS_URL
               value: redis://byteorder-redis:6379
@@ -41,7 +46,19 @@ spec:
             - name: ADMIN_DEFAULT_PASSWORD
               value: {{ $.Values.adminDefaultPassword | quote }}
             {{- end }}
-{{- end }}
+          {{- if eq $svc "frontend" }}
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+          {{- end }}
+      {{- if eq $svc "frontend" }}
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: byteorder-frontend-nginx
+      {{- end }}
+{{ end }}
 
 {{- /* Services (k8s Service objects) */ -}}
 ---

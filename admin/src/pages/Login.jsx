@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
@@ -7,7 +7,14 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [kitchenName, setKitchenName] = useState('ByteOrder')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    axios.get('/api/settings/kitchen_name').then(({ data }) => {
+      if (data.value) setKitchenName(data.value)
+    }).catch(() => {})
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -25,9 +32,9 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">ByteOrder</h1>
+    <div className="min-h-screen bg-brand-bg flex items-center justify-center">
+      <div className="bg-brand-surface rounded-xl shadow-lg p-8 w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-brand-text mb-1">{kitchenName}</h1>
         <p className="text-gray-500 text-sm mb-6">Admin sign in</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -37,7 +44,7 @@ export default function Login() {
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
               required
             />
           </div>
@@ -47,7 +54,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
               required
             />
           </div>
@@ -57,7 +64,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg transition-colors"
+            className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg transition-colors"
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>

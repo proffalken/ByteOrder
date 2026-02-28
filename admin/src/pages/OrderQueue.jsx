@@ -29,7 +29,17 @@ export default function OrderQueue() {
   useEffect(() => {
     fetchQueue()
     const interval = setInterval(fetchQueue, 10000)
-    return () => clearInterval(interval)
+
+    const token = localStorage.getItem('token')
+    const es = token
+      ? new EventSource(`/api/orders/queue/stream?token=${encodeURIComponent(token)}`)
+      : null
+    if (es) {
+      es.onmessage = () => fetchQueue()
+      es.onerror = () => {}   // polling handles reconnection
+    }
+
+    return () => { clearInterval(interval); es?.close() }
   }, [fetchQueue])
 
   async function advance(order) {
@@ -44,8 +54,8 @@ export default function OrderQueue() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Order Queue</h1>
-        <button onClick={fetchQueue} className="text-sm text-orange-600 hover:underline">Refresh</button>
+        <h1 className="text-2xl font-bold text-brand-text">Order Queue</h1>
+        <button onClick={fetchQueue} className="text-sm text-brand-600 hover:underline">Refresh</button>
       </div>
 
       {orders.length === 0 && (
@@ -54,10 +64,10 @@ export default function OrderQueue() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {orders.map(order => (
-          <div key={order.id} className="bg-white rounded-xl shadow p-4 flex flex-col gap-3">
+          <div key={order.id} className="bg-brand-surface rounded-xl shadow p-4 flex flex-col gap-3">
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-bold text-lg text-gray-900">{order.order_number}</p>
+                <p className="font-bold text-lg text-brand-text">{order.order_number}</p>
                 <p className="text-gray-600">{order.customer_name}</p>
               </div>
               <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLOURS[order.status]}`}>
@@ -91,7 +101,7 @@ export default function OrderQueue() {
             {NEXT_STATUS[order.status] && (
               <button
                 onClick={() => advance(order)}
-                className="mt-auto w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+                className="mt-auto w-full bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors"
               >
                 {NEXT_LABEL[order.status]}
               </button>

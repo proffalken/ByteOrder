@@ -1,15 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import api from '../lib/api'
 import axios from 'axios'
+
+const MAX_LOGO_BYTES = 512 * 1024  // 512 KB
 
 export default function Settings() {
   const [printerUrl, setPrinterUrl] = useState('')
   const [kitchenName, setKitchenName] = useState('')
   const [frontendUrl, setFrontendUrl] = useState('')
+  const [logo, setLogo] = useState('')
+  const [brandPrimary, setBrandPrimary] = useState('#ea580c')
+  const [brandBg, setBrandBg] = useState('#f9fafb')
+  const [brandSurface, setBrandSurface] = useState('#ffffff')
+  const [brandText, setBrandText] = useState('#111827')
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [saved, setSaved] = useState('')
   const [error, setError] = useState('')
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     api.get('/settings/').then(({ data }) => {
@@ -17,8 +25,60 @@ export default function Settings() {
       setPrinterUrl(map.printer_url || '')
       setKitchenName(map.kitchen_name || '')
       setFrontendUrl(map.frontend_url || '')
+      setLogo(map.logo || '')
+      const colour = map.brand_primary || '#ea580c'
+      setBrandPrimary(colour)
+      document.documentElement.style.setProperty('--brand-primary', colour)
+      const bg = map.brand_bg || '#f9fafb'
+      setBrandBg(bg)
+      document.documentElement.style.setProperty('--brand-bg', bg)
+      const surface = map.brand_surface || '#ffffff'
+      setBrandSurface(surface)
+      document.documentElement.style.setProperty('--brand-surface', surface)
+      const text = map.brand_text || '#111827'
+      setBrandText(text)
+      document.documentElement.style.setProperty('--brand-text', text)
     })
   }, [])
+
+  function handleBrandColour(hex) {
+    setBrandPrimary(hex)
+    document.documentElement.style.setProperty('--brand-primary', hex)
+  }
+
+  function handleBrandBg(hex) {
+    setBrandBg(hex)
+    document.documentElement.style.setProperty('--brand-bg', hex)
+  }
+
+  function handleBrandSurface(hex) {
+    setBrandSurface(hex)
+    document.documentElement.style.setProperty('--brand-surface', hex)
+  }
+
+  function handleBrandText(hex) {
+    setBrandText(hex)
+    document.documentElement.style.setProperty('--brand-text', hex)
+  }
+
+  function handleLogoFile(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.size > MAX_LOGO_BYTES) {
+      setError(`Logo must be under 512 KB (this file is ${Math.round(file.size / 1024)} KB)`)
+      e.target.value = ''
+      return
+    }
+    setError('')
+    const reader = new FileReader()
+    reader.onload = ev => setLogo(ev.target.result)
+    reader.readAsDataURL(file)
+  }
+
+  function clearLogo() {
+    setLogo('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   async function saveSettings(e) {
     e.preventDefault()
@@ -26,9 +86,14 @@ export default function Settings() {
     setSaved('')
     try {
       await Promise.all([
-        api.put('/settings/printer_url', { value: printerUrl }),
-        api.put('/settings/kitchen_name', { value: kitchenName }),
-        api.put('/settings/frontend_url', { value: frontendUrl }),
+        api.put('/settings/printer_url',   { value: printerUrl }),
+        api.put('/settings/kitchen_name',  { value: kitchenName }),
+        api.put('/settings/frontend_url',  { value: frontendUrl }),
+        api.put('/settings/logo',          { value: logo }),
+        api.put('/settings/brand_primary', { value: brandPrimary }),
+        api.put('/settings/brand_bg',      { value: brandBg }),
+        api.put('/settings/brand_surface', { value: brandSurface }),
+        api.put('/settings/brand_text',    { value: brandText }),
       ])
       setSaved('Settings saved.')
     } catch {
@@ -55,12 +120,12 @@ export default function Settings() {
 
   return (
     <div className="max-w-lg space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+      <h1 className="text-2xl font-bold text-brand-text">Settings</h1>
 
       {saved && <p className="text-green-600 text-sm">{saved}</p>}
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      <form onSubmit={saveSettings} className="bg-white rounded-xl shadow p-6 space-y-4">
+      <form onSubmit={saveSettings} className="bg-brand-surface rounded-xl shadow p-6 space-y-4">
         <h2 className="text-lg font-semibold text-gray-800">Kitchen Settings</h2>
 
         <div>
@@ -95,12 +160,118 @@ export default function Settings() {
           <p className="text-xs text-gray-400 mt-1">Used to generate the QR code for customers</p>
         </div>
 
-        <button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg px-6 py-2">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Brand Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={brandPrimary}
+              onChange={e => handleBrandColour(e.target.value)}
+              className="h-10 w-16 rounded border cursor-pointer p-0.5"
+            />
+            <span className="text-sm font-mono text-gray-600">{brandPrimary}</span>
+            <button
+              type="button"
+              onClick={() => handleBrandColour('#ea580c')}
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
+            >
+              Reset to default
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Applied across the ordering interface and admin panel — live preview as you pick</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Background Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={brandBg}
+              onChange={e => handleBrandBg(e.target.value)}
+              className="h-10 w-16 rounded border cursor-pointer p-0.5"
+            />
+            <span className="text-sm font-mono text-gray-600">{brandBg}</span>
+            <button
+              type="button"
+              onClick={() => handleBrandBg('#f9fafb')}
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
+            >
+              Reset to default
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Page background colour</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Surface Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={brandSurface}
+              onChange={e => handleBrandSurface(e.target.value)}
+              className="h-10 w-16 rounded border cursor-pointer p-0.5"
+            />
+            <span className="text-sm font-mono text-gray-600">{brandSurface}</span>
+            <button
+              type="button"
+              onClick={() => handleBrandSurface('#ffffff')}
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
+            >
+              Reset to default
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Card and panel backgrounds</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Text Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={brandText}
+              onChange={e => handleBrandText(e.target.value)}
+              className="h-10 w-16 rounded border cursor-pointer p-0.5"
+            />
+            <span className="text-sm font-mono text-gray-600">{brandText}</span>
+            <button
+              type="button"
+              onClick={() => handleBrandText('#111827')}
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
+            >
+              Reset to default
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Primary heading and body text</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Kitchen Logo</label>
+          {logo ? (
+            <div className="flex items-center gap-4 mb-2">
+              <img src={logo} alt="Logo preview" className="h-16 w-auto object-contain rounded border" />
+              <button type="button" onClick={clearLogo} className="text-xs text-red-500 hover:text-red-700">
+                Remove
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400 mb-2">No logo set — kitchen name will be shown instead</p>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleLogoFile}
+            className="text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100"
+          />
+          <p className="text-xs text-gray-400 mt-1">PNG, JPG or SVG · max 512 KB</p>
+        </div>
+
+        <button type="submit" className="bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-6 py-2">
           Save Settings
         </button>
       </form>
 
-      <form onSubmit={changePassword} className="bg-white rounded-xl shadow p-6 space-y-4">
+      <form onSubmit={changePassword} className="bg-brand-surface rounded-xl shadow p-6 space-y-4">
         <h2 className="text-lg font-semibold text-gray-800">Change Password</h2>
 
         <div>

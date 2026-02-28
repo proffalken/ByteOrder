@@ -33,3 +33,6 @@ dist/
 *.pem
 *.key
 secrets/
+
+# Site-specific Helm values (contain cluster refs / secrets)
+deploy/helm/**/values.*.yaml
