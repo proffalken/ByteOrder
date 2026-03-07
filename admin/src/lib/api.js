@@ -2,19 +2,22 @@ import axios from 'axios'
 
 const api = axios.create({ baseURL: '/api' })
 
-api.interceptors.request.use(async config => {
-  const token = await window.Clerk?.session?.getToken()
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
+// Called once by ApiSetup (admin/src/App.jsx) after Clerk has initialised,
+// so token retrieval and 401 handling go through Clerk's React APIs.
+export function setupApiInterceptors({ getToken, openSignIn }) {
+  api.interceptors.request.use(async config => {
+    const token = await getToken()
+    if (token) config.headers.Authorization = `Bearer ${token}`
+    return config
+  })
 
-api.interceptors.response.use(
-  r => r,
-  err => {
-    // Trigger Clerk's sign-in flow rather than a hard redirect
-    if (err.response?.status === 401) window.Clerk?.openSignIn?.()
-    return Promise.reject(err)
-  }
-)
+  api.interceptors.response.use(
+    r => r,
+    err => {
+      if (err.response?.status === 401) openSignIn()
+      return Promise.reject(err)
+    }
+  )
+}
 
 export default api

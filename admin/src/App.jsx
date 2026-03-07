@@ -1,6 +1,17 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth, useClerk } from '@clerk/clerk-react'
 import Layout from './components/Layout'
+import { setupApiInterceptors } from './lib/api'
+
+// Registers Axios interceptors using Clerk's React APIs after the session
+// is available. Rendered once inside <SignedIn> so hooks are always valid.
+function ApiSetup() {
+  const { getToken } = useAuth()
+  const { openSignIn } = useClerk()
+  useEffect(() => { setupApiInterceptors({ getToken, openSignIn }) }, [getToken, openSignIn])
+  return null
+}
 import OrderQueue from './pages/OrderQueue'
 import OrderHistory from './pages/OrderHistory'
 import MenuManagement from './pages/MenuManagement'
@@ -10,7 +21,10 @@ import Settings from './pages/Settings'
 function ProtectedLayout() {
   return (
     <>
-      <SignedIn><Layout /></SignedIn>
+      <SignedIn>
+        <ApiSetup />
+        <Layout />
+      </SignedIn>
       <SignedOut><RedirectToSignIn /></SignedOut>
     </>
   )

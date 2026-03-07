@@ -15,9 +15,18 @@ spec:
       labels:
         app: byteorder-{{ $svc }}
     spec:
-      {{- if $.Values.imagePullSecret }}
+      {{- $pullSecrets := list -}}
+      {{- if $.Values.imagePullSecret -}}
+        {{- $pullSecrets = append $pullSecrets $.Values.imagePullSecret -}}
+      {{- end -}}
+      {{- range $.Values.imagePullSecrets -}}
+        {{- $pullSecrets = append $pullSecrets . -}}
+      {{- end -}}
+      {{- if $pullSecrets }}
       imagePullSecrets:
-        - name: {{ $.Values.imagePullSecret }}
+        {{- range $pullSecrets }}
+        - name: {{ . }}
+        {{- end }}
       {{- end }}
       containers:
         - name: {{ $svc }}

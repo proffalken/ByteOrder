@@ -23,7 +23,8 @@ clerk:
 # e.g. a GHCR PAT secret created with:
 #   kubectl create secret docker-registry ghcr-pull-secret \
 #     --docker-server=ghcr.io --docker-username=<user> --docker-password=<PAT>
-imagePullSecret: ""
+imagePullSecret: ""   # single secret name (shorthand)
+imagePullSecrets: [] # list of secret names (use either or both)
 
 otelEndpoint: ""
 
