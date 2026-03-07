@@ -11,7 +11,8 @@ api.interceptors.request.use(async config => {
 api.interceptors.response.use(
   r => r,
   err => {
-    if (err.response?.status === 401) window.location.href = '/'
+    // Trigger Clerk's sign-in flow rather than a hard redirect
+    if (err.response?.status === 401) window.Clerk?.openSignIn?.()
     return Promise.reject(err)
   }
 )

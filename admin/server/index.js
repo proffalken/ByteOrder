@@ -11,6 +11,13 @@ const menuProxy = require('./routes/menu')
 const orderProxy = require('./routes/orders')
 const settingsProxy = require('./routes/settings')
 
+const requiredEnv = ['CLERK_PUBLISHABLE_KEY', 'CLERK_SECRET_KEY']
+const missingEnv = requiredEnv.filter(name => !process.env[name])
+if (missingEnv.length) {
+  console.error(`FATAL: Missing required Clerk configuration: ${missingEnv.join(', ')}`)
+  process.exit(1)
+}
+
 const app = express()
 const PORT = process.env.PORT || 3001
 

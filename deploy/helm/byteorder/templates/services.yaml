@@ -15,6 +15,10 @@ spec:
       labels:
         app: byteorder-{{ $svc }}
     spec:
+      {{- if $.Values.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ $.Values.imagePullSecret }}
+      {{- end }}
       containers:
         - name: {{ $svc }}
           image: {{ $.Values.registry }}/{{ $svc }}:{{ $.Values.imageTag }}
@@ -46,12 +50,12 @@ spec:
             - name: CLERK_PUBLISHABLE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: byteorder-clerk
+                  name: {{ if $.Values.clerk.existingSecretName }}{{ $.Values.clerk.existingSecretName }}{{ else }}byteorder-clerk{{ end }}
                   key: publishable-key
             - name: CLERK_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: byteorder-clerk
+                  name: {{ if $.Values.clerk.existingSecretName }}{{ $.Values.clerk.existingSecretName }}{{ else }}byteorder-clerk{{ end }}
                   key: secret-key
             {{- end }}
           {{- if eq $svc "frontend" }}
