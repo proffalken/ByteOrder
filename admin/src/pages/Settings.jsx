@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
+import { useOrganization } from '@clerk/clerk-react'
 import api from '../lib/api'
-import axios from 'axios'
 
 const MAX_LOGO_BYTES = 512 * 1024  // 512 KB
 
 export default function Settings() {
+  const { organization } = useOrganization()
   const [printerUrl, setPrinterUrl] = useState('')
   const [kitchenName, setKitchenName] = useState('')
   const [frontendUrl, setFrontendUrl] = useState('')
@@ -13,8 +14,7 @@ export default function Settings() {
   const [brandBg, setBrandBg] = useState('#f9fafb')
   const [brandSurface, setBrandSurface] = useState('#ffffff')
   const [brandText, setBrandText] = useState('#111827')
-  const [currentPw, setCurrentPw] = useState('')
-  const [newPw, setNewPw] = useState('')
+  const [prefilled, setPrefilled] = useState(false)
   const [saved, setSaved] = useState('')
   const [error, setError] = useState('')
   const fileInputRef = useRef(null)
@@ -23,9 +23,7 @@ export default function Settings() {
     api.get('/settings/').then(({ data }) => {
       const map = Object.fromEntries(data.map(s => [s.key, s.value || '']))
       setPrinterUrl(map.printer_url || '')
-      setKitchenName(map.kitchen_name || '')
       setFrontendUrl(map.frontend_url || '')
-      setLogo(map.logo || '')
       const colour = map.brand_primary || '#ea580c'
       setBrandPrimary(colour)
       document.documentElement.style.setProperty('--brand-primary', colour)
@@ -38,8 +36,17 @@ export default function Settings() {
       const text = map.brand_text || '#111827'
       setBrandText(text)
       document.documentElement.style.setProperty('--brand-text', text)
+
+      // Auto-populate name and logo from Clerk org if not already set
+      const savedName = map.kitchen_name || ''
+      const savedLogo = map.logo || ''
+      setKitchenName(savedName || organization?.name || '')
+      setLogo(savedLogo || organization?.imageUrl || '')
+      if ((!savedName && organization?.name) || (!savedLogo && organization?.imageUrl)) {
+        setPrefilled(true)
+      }
     })
-  }, [])
+  }, [organization])
 
   function handleBrandColour(hex) {
     setBrandPrimary(hex)
@@ -101,27 +108,16 @@ export default function Settings() {
     }
   }
 
-  async function changePassword(e) {
-    e.preventDefault()
-    setError('')
-    setSaved('')
-    try {
-      await axios.post('/api/auth/change-password', {
-        current_password: currentPw,
-        new_password: newPw,
-      }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
-      setSaved('Password updated.')
-      setCurrentPw('')
-      setNewPw('')
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to change password.')
-    }
-  }
-
   return (
     <div className="max-w-lg space-y-8">
       <h1 className="text-2xl font-bold text-brand-text">Settings</h1>
 
+      {prefilled && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700 flex justify-between items-start">
+          <span>Pre-filled from your Clerk organization. Review and save to confirm.</span>
+          <button onClick={() => setPrefilled(false)} className="ml-4 text-blue-400 hover:text-blue-600 font-bold">✕</button>
+        </div>
+      )}
       {saved && <p className="text-green-600 text-sm">{saved}</p>}
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
@@ -271,34 +267,6 @@ export default function Settings() {
         </button>
       </form>
 
-      <form onSubmit={changePassword} className="bg-brand-surface rounded-xl shadow p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-800">Change Password</h2>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Current password</label>
-          <input
-            type="password"
-            value={currentPw}
-            onChange={e => setCurrentPw(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">New password</label>
-          <input
-            type="password"
-            value={newPw}
-            onChange={e => setNewPw(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-            required
-            minLength={8}
-          />
-        </div>
-        <button type="submit" className="bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg px-6 py-2">
-          Change Password
-        </button>
-      </form>
     </div>
   )
 }
