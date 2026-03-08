@@ -5,7 +5,7 @@ from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
-from app.routers import orders
+from app.routers import orders, printers
 
 _otel_exporter_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
 if _otel_exporter_endpoint or settings.otel_endpoint:
@@ -43,6 +43,7 @@ def _run_migrations():
                 END IF;
             END $$
         """))
+        # printer_devices — created by Base.metadata.create_all, no ALTER needed
         conn.commit()
 
 
@@ -63,6 +64,7 @@ app.add_middleware(
 )
 
 app.include_router(orders.router)
+app.include_router(printers.router)
 
 if _otel_exporter_endpoint or settings.otel_endpoint:
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor

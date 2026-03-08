@@ -8,6 +8,7 @@ const nav = [
   { to: '/history', label: 'Order History' },
   { to: '/menu', label: 'Menu' },
   { to: '/ingredients', label: 'Ingredients' },
+  { to: '/printers', label: 'Printers' },
   { to: '/settings', label: 'Settings' },
 ]
 

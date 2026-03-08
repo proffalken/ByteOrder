@@ -1,0 +1,18 @@
+[Unit]
+Description=ByteOrder Print Client
+After=network.target NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/byteorder-printer
+ExecStart=/opt/byteorder-printer/venv/bin/python -m byteorder_printer.main
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=byteorder-print-client
+
+[Install]
+WantedBy=multi-user.target

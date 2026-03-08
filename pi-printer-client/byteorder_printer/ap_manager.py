@@ -1,0 +1,66 @@
+import subprocess
+import logging
+
+log = logging.getLogger(__name__)
+
+AP_CONN_NAME = "byteorder-ap"
+AP_INTERFACE = "wlan0"
+AP_IP = "192.168.4.1"
+DNS_CONF = "/etc/NetworkManager/dnsmasq-shared.d/byteorder-captive.conf"
+
+
+def start_ap(ssid: str) -> None:
+    """
+    Bring up a NetworkManager WiFi hotspot with the given SSID and install
+    a dnsmasq config that redirects all DNS to this host (captive portal).
+    """
+    # Tear down any existing AP profile
+    stop_ap()
+
+    # Create hotspot
+    result = subprocess.run(
+        [
+            "nmcli", "device", "wifi", "hotspot",
+            "ifname", AP_INTERFACE,
+            "con-name", AP_CONN_NAME,
+            "ssid", ssid,
+            "band", "bg",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Failed to start AP: {result.stderr.strip()}")
+
+    # Install captive-portal DNS redirect so iOS/Android detect the portal
+    _install_dns_redirect()
+
+    log.info("AP '%s' started on %s", ssid, AP_INTERFACE)
+
+
+def stop_ap() -> None:
+    """Tear down the hotspot and remove the DNS redirect config."""
+    subprocess.run(
+        ["nmcli", "connection", "delete", AP_CONN_NAME],
+        capture_output=True,
+    )
+    _remove_dns_redirect()
+
+
+def _install_dns_redirect() -> None:
+    import os
+    os.makedirs("/etc/NetworkManager/dnsmasq-shared.d", exist_ok=True)
+    with open(DNS_CONF, "w") as f:
+        # Redirect every DNS query to this host so clients see the captive portal
+        f.write(f"address=/#/{AP_IP}\n")
+    # Reload NM so dnsmasq picks up the new config
+    subprocess.run(["nmcli", "general", "reload"], capture_output=True)
+
+
+def _remove_dns_redirect() -> None:
+    import os
+    try:
+        os.remove(DNS_CONF)
+        subprocess.run(["nmcli", "general", "reload"], capture_output=True)
+    except FileNotFoundError:
+        pass

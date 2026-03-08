@@ -1,0 +1,18 @@
+[Unit]
+Description=ByteOrder BLE Print Server
+After=bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ble-print-server
+ExecStart=/opt/ble-print-server/venv/bin/python server.py --host 127.0.0.1 --port 8080
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=byteorder-ble-printer
+
+[Install]
+WantedBy=multi-user.target
