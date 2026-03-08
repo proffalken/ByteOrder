@@ -9,7 +9,7 @@ import { setupApiInterceptors } from './lib/api'
 function ApiSetup() {
   const { getToken } = useAuth()
   const { openSignIn } = useClerk()
-  useEffect(() => { setupApiInterceptors({ getToken, openSignIn }) }, [getToken, openSignIn])
+  useEffect(() => setupApiInterceptors({ getToken, openSignIn }), [getToken, openSignIn])
   return null
 }
 import OrderQueue from './pages/OrderQueue'
