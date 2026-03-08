@@ -83,7 +83,7 @@ def create_order(data: schemas.OrderIn, db: Session = Depends(get_db), kitchen_i
     # Publish to Redis for print-service and queue watchers
     redis = get_redis()
     redis.publish("queue_updates", json.dumps({"order_id": order.id, "status": order.status}))
-    redis.publish("new_orders", json.dumps({
+    order_payload = json.dumps({
         "order_id": order.id,
         "order_number": order.order_number,
         "customer_name": order.customer_name,
@@ -101,7 +101,10 @@ def create_order(data: schemas.OrderIn, db: Session = Depends(get_db), kitchen_i
             }
             for oi in order.items
         ],
-    }))
+    })
+    redis.publish("new_orders", order_payload)
+    # Kitchen-scoped channel for Pi printer clients
+    redis.publish(f"new_orders:{order.kitchen_id}", order_payload)
 
     result = schemas.OrderOut.model_validate(order)
     result.queue_position = _queue_position(order, db)

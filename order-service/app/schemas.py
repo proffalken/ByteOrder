@@ -65,3 +65,34 @@ class OrderOut(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: str
+
+
+class PrinterRegistration(BaseModel):
+    mac_address: str
+
+
+class PrinterClaim(BaseModel):
+    claim_code: str
+    name: str
+
+
+class PrinterRename(BaseModel):
+    name: str
+
+
+class PrinterDeviceOut(BaseModel):
+    id: int
+    mac_address: str
+    claim_code: str
+    name: Optional[str]
+    kitchen_id: Optional[str]
+    registered_at: datetime
+    claimed_at: Optional[datetime]
+    last_seen_at: Optional[datetime]
+    model_config = {"from_attributes": True}
+
+
+class PrinterRegisterResponse(BaseModel):
+    claim_code: str
+    claimed: bool
+    kitchen_id: Optional[str]
