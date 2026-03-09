@@ -6,9 +6,10 @@ const MENU_SERVICE = process.env.MENU_SERVICE_URL || 'http://menu-service:8000'
 const AUTH_MODE = process.env.AUTH_MODE || 'cloud'
 
 function getKitchenId(req) {
-  return AUTH_MODE === 'self-hosted'
-    ? (process.env.DEFAULT_KITCHEN_ID || 'default')
-    : (req.auth?.orgId || req.auth?.userId)
+  if (AUTH_MODE === 'self-hosted') return process.env.DEFAULT_KITCHEN_ID || 'default'
+  // @clerk/express v2: req.auth is a function, not an object — must call it.
+  const auth = req.auth?.()
+  return auth?.orgId || auth?.userId
 }
 
 router.all('/*', async (req, res) => {
