@@ -6,6 +6,11 @@ on:
     paths:
       - "order-service/**"
       - ".github/workflows/order-service-docker.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "order-service/**"
+      - ".github/workflows/order-service-docker.yml"
 
 env:
   REGISTRY: ghcr.io
@@ -26,6 +31,7 @@ jobs:
 
   build-and-push:
     needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
