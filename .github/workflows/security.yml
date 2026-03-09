@@ -45,14 +45,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
       - name: Scan source and dependencies with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: sarif
-          output: trivy-fs.sarif
-          severity: CRITICAL,HIGH
+        run: trivy fs --format sarif --output trivy-fs.sarif --severity CRITICAL,HIGH --exit-code 0 .
 
       - name: Upload results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
