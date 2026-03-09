@@ -12,7 +12,20 @@ env:
   IMAGE_NAME: ${{ github.repository }}/menu-service
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+        working-directory: menu-service
+      - run: python -m pytest tests/ -v
+        working-directory: menu-service
+
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
