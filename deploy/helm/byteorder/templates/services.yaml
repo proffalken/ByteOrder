@@ -70,7 +70,8 @@ spec:
                   name: {{ if $.Values.clerk.existingSecretName }}{{ $.Values.clerk.existingSecretName }}{{ else }}byteorder-clerk{{ end }}
                   key: secret-key
             {{- else }}
-            {{- $selfHostedSecret := ternary $.Values.selfHosted.existingSecretName "byteorder-self-hosted" (ne $.Values.selfHosted.existingSecretName "") }}
+            {{- $selfHostedExistingSecret := dig "selfHosted" "existingSecretName" "" $.Values }}
+            {{- $selfHostedSecret := ternary $selfHostedExistingSecret "byteorder-self-hosted" (ne $selfHostedExistingSecret "") }}
             - name: ADMIN_USERNAME
               valueFrom:
                 secretKeyRef:

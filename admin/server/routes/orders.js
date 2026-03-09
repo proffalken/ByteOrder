@@ -9,7 +9,7 @@ const AUTH_MODE = process.env.AUTH_MODE || 'cloud'
 function getKitchenId(req) {
   return AUTH_MODE === 'self-hosted'
     ? (process.env.DEFAULT_KITCHEN_ID || 'default')
-    : req.auth?.orgId
+    : (req.auth?.orgId || req.auth?.userId)
 }
 
 // SSE proxy — must come before router.all() since axios buffers and cannot proxy SSE.

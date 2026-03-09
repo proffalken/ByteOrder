@@ -1,4 +1,4 @@
-registry: ghcr.io/proffalken/byteorder
+registry: ghcr.io/matts-baps/byteorder
 imageTag: latest
 
 postgres:
