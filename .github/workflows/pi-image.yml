@@ -7,6 +7,11 @@ on:
       - "print-service/**"
       - "pi-image/**"
       - ".github/workflows/pi-image.yml"
+  pull_request:
+    paths:
+      - "print-service/**"
+      - "pi-image/**"
+      - ".github/workflows/pi-image.yml"
   # Manual trigger: set `release_tag` to produce a release-tagged artifact
   # (e.g. v1.2.3).  Leave empty for a plain dev build.
   workflow_dispatch:
