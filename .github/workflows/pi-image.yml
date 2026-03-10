@@ -7,6 +7,11 @@ on:
       - "print-service/**"
       - "pi-image/**"
       - ".github/workflows/pi-image.yml"
+  pull_request:
+    paths:
+      - "print-service/**"
+      - "pi-image/**"
+      - ".github/workflows/pi-image.yml"
   # Manual trigger: set `release_tag` to produce a release-tagged artifact
   # (e.g. v1.2.3).  Leave empty for a plain dev build.
   workflow_dispatch:
@@ -23,7 +28,7 @@ concurrency:
 
 jobs:
   build-pi-image:
-    name: Build Raspberry Pi OS Lite image (armhf / Pi Zero W)
+    name: Build Raspberry Pi OS Lite image (arm64 / Pi Zero 2 W, Pi 3, Pi 4)
     runs-on: ubuntu-latest
     permissions:
       contents: write   # needed to create GitHub Releases and upload assets
@@ -41,10 +46,15 @@ jobs:
             zip dosfstools libcap2-bin rsync xz-utils file git curl \
             binfmt-support libarchive-tools arch-test bc kmod xxd gpg pigz
 
-      # ── Clone pi-gen (main branch = 32-bit armhf, Pi Zero W compatible) ──
+      # ── Clone pi-gen (arm64 branch = 64-bit aarch64) ──────────────────────
+      # Pi Zero W (ARMv6) is approaching end-of-life (production guarantee
+      # elapsed January 2026).  The arm64 branch targets Pi Zero 2 W, Pi 3,
+      # Pi 4 and later — all ARMv8 with aarch64 wheels available on PyPI,
+      # enabling full OpenTelemetry support.
       - name: Clone pi-gen
         run: |
-          git clone --depth 1 https://github.com/RPi-Distro/pi-gen.git /tmp/pi-gen
+          git clone --depth 1 --branch arm64 \
+            https://github.com/RPi-Distro/pi-gen.git /tmp/pi-gen
 
       # ── Write pi-gen config ────────────────────────────────────────────────
       - name: Write pi-gen config
@@ -73,10 +83,11 @@ jobs:
           # Build Lite only (stages 0-2) plus our custom ByteOrder stage.
           STAGE_LIST="stage0 stage1 stage2 stage-byteorder"
 
-          # Output a single compressed image; skip NOOBS packaging.
+          # Output a single xz-compressed image.
+          # DEPLOY_COMPRESSION replaces the old COMPRESS variable in the arm64 branch.
           EXPORT_NOOBS=0
           EXPORT_LAST_IMAGE_ONLY=1
-          COMPRESS=1
+          DEPLOY_COMPRESSION=xz
           USE_QEMU=0
           EOF
 
@@ -101,62 +112,72 @@ jobs:
           # The chroot script will install it into /opt/byteorder-print/.
           cp -r print-service/app "${STEP}/files/app"
 
-          # Copy the Pi-specific requirements (no psycopg2-binary, no OTel).
+          # Copy the Pi-specific requirements (includes OpenTelemetry — aarch64
+          # wheels are available for all deps including grpcio).
           cp pi-image/requirements-pi.txt "${STEP}/files/requirements-pi.txt"
 
           # Copy the systemd service unit.
           cp pi-image/files/byteorder-print.service \
              "${STEP}/files/byteorder-print.service"
 
-          # Write the chroot install script.
-          # Runs inside the armhf QEMU chroot on the image's rootfs.
+          # 00-run.sh runs on the HOST (Ubuntu runner) — use it to copy files
+          # from the stage into ${ROOTFS_DIR} (the Pi image rootfs).
           cat > "${STEP}/00-run.sh" <<'RUNEOF'
-          #!/bin/bash -e
-          # Runs inside the armhf Bookworm chroot (via pi-gen + QEMU).
-          # This script is executed from the step directory, so files/ is relative.
+#!/bin/bash -e
+# Runs on the CI host. Copies app files into the Pi image rootfs so that
+# 00-run-chroot.sh (which runs inside the QEMU chroot) can find them.
 
-          # ── Install system Python and psycopg2 from apt ───────────────────
-          # python3-psycopg2 ships a compiled arm binary — avoids a slow
-          # source build of psycopg2 inside QEMU emulation.
-          apt-get install -y --no-install-recommends \
-            python3-venv python3-pip python3-psycopg2 libpq5
+install -d "${ROOTFS_DIR}/opt/byteorder-print"
+cp -r files/app "${ROOTFS_DIR}/opt/byteorder-print/app"
+cp files/requirements-pi.txt "${ROOTFS_DIR}/opt/byteorder-print/requirements-pi.txt"
 
-          # ── Set up the application directory ──────────────────────────────
-          install -d /opt/byteorder-print
-          cp -r files/app /opt/byteorder-print/app
+install -d -m 750 "${ROOTFS_DIR}/etc/byteorder"
+cat > "${ROOTFS_DIR}/etc/byteorder/print-service.env" <<'ENVEOF'
+# ByteOrder print-service environment — edit before first boot.
+# After editing, run: sudo systemctl restart byteorder-print
+REDIS_URL=redis://192.168.1.x:6379
+DATABASE_URL=postgresql://byteorder:byteorder@192.168.1.x:5432/byteorder
+# Uncomment and set to enable OpenTelemetry tracing/metrics:
+# OTEL_ENDPOINT=http://<byteorder-host>:4318
+ENVEOF
+chmod 640 "${ROOTFS_DIR}/etc/byteorder/print-service.env"
 
-          # ── Install uv for fast, reliable dependency installation ─────────
-          pip3 install --no-cache-dir uv
-
-          # ── Create a virtualenv that can see the system psycopg2 ──────────
-          uv venv --system-site-packages /opt/byteorder-print/venv
-
-          # ── Install pure-Python dependencies ──────────────────────────────
-          # psycopg2 is satisfied by the system package above.
-          /opt/byteorder-print/venv/bin/uv pip install --no-cache-dir \
-            -r files/requirements-pi.txt
-
-          # ── Install env-file directory ────────────────────────────────────
-          install -d -m 750 /etc/byteorder
-
-          cat > /etc/byteorder/print-service.env <<'ENVEOF'
-          # ByteOrder print-service environment — edit before first boot.
-          # After editing, run: sudo systemctl restart byteorder-print
-          REDIS_URL=redis://192.168.1.x:6379
-          DATABASE_URL=postgresql://byteorder:byteorder@192.168.1.x:5432/byteorder
-          # OTEL_ENDPOINT=
-          ENVEOF
-
-          chmod 640 /etc/byteorder/print-service.env
-
-          # ── Install and enable the systemd service ────────────────────────
-          install -m 0644 files/byteorder-print.service \
-            /etc/systemd/system/byteorder-print.service
-
-          systemctl enable byteorder-print.service
-          RUNEOF
-
+install -m 0644 files/byteorder-print.service \
+  "${ROOTFS_DIR}/etc/systemd/system/byteorder-print.service"
+RUNEOF
           chmod +x "${STEP}/00-run.sh"
+
+          # 00-run-chroot.sh runs INSIDE the aarch64 QEMU chroot.
+          # apt-get, pip, uv, and systemctl all operate on the Pi image here.
+          cat > "${STEP}/00-run-chroot.sh" <<'RUNEOF'
+#!/bin/bash -e
+# Runs inside the aarch64 Bookworm chroot (via pi-gen + QEMU).
+
+# ── Install system Python and psycopg2 from apt ───────────────────────
+# python3-psycopg2 ships a compiled aarch64 binary — avoids building
+# a C extension inside QEMU emulation.
+apt-get install -y --no-install-recommends \
+  python3-venv python3-pip python3-psycopg2 libpq5
+
+# ── Install uv for fast, reliable dependency installation ─────────────
+pip3 install --no-cache-dir uv
+
+# ── Create a virtualenv that can see the system psycopg2 ──────────────
+uv venv --system-site-packages /opt/byteorder-print/venv
+
+# ── Install dependencies including OpenTelemetry ──────────────────────
+# All packages including grpcio have aarch64 wheels on PyPI.
+# psycopg2 is satisfied by the system package above.
+/opt/byteorder-print/venv/bin/uv pip install --no-cache-dir \
+  -r /opt/byteorder-print/requirements-pi.txt
+
+# ── Enable the systemd service ────────────────────────────────────────
+systemctl enable byteorder-print.service
+RUNEOF
+
+          # arm64 pi-gen requires an EXPORT_IMAGE file in the stage directory
+          # to trigger image export (absence of SKIP_IMAGES is not sufficient).
+          touch /tmp/pi-gen/stage-byteorder/EXPORT_IMAGE
 
       # ── Run pi-gen ─────────────────────────────────────────────────────────
       - name: Build image with pi-gen
@@ -206,11 +227,15 @@ jobs:
           body: |
             ## ByteOrder Raspberry Pi OS Image — ${{ steps.image.outputs.version }}
 
-            Pre-built Raspberry Pi OS Lite (Bookworm, **32-bit armhf**) image
+            Pre-built Raspberry Pi OS Lite (Bookworm, **64-bit arm64**) image
             with the ByteOrder print service pre-installed and running natively
             via systemd (no Docker required).
 
-            Compatible with: Pi Zero W, Pi Zero 2 W, Pi 1, Pi 2, Pi 3, Pi 4.
+            **Compatible with:** Pi Zero 2 W, Pi 3 (A+/B/B+), Pi 4, Pi 5, Pi CM3, Pi CM4.
+
+            > **Pi Zero W (original) is not supported** — it uses ARMv6 which cannot
+            > run 64-bit images.  The original Pi Zero W's Raspberry Pi Foundation
+            > production guarantee elapsed January 2026.
 
             ### Flashing
 
@@ -230,6 +255,8 @@ jobs:
             ```env
             REDIS_URL=redis://<host>:6379
             DATABASE_URL=postgresql://byteorder:<pass>@<host>:5432/byteorder
+            # Optional — enable OpenTelemetry tracing and metrics:
+            # OTEL_ENDPOINT=http://<byteorder-host>:4318
             ```
 
             Then reboot — or run `sudo systemctl start byteorder-print`.
