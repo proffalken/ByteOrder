@@ -4,26 +4,28 @@
 
 apt-get update -qq
 apt-get install -y --no-install-recommends \
-  python3-venv python3-pip python3-psycopg2 libpq5
+  python3-venv python3-pip \
+  network-manager \
+  bluetooth bluez \
+  rfkill
 
-python3 -m pip install --no-cache-dir --break-system-packages uv
-
-# Create the byteorder user with a locked password. Auto-assign UID so we
-# don't collide with any existing UID-1000 user (e.g. a default 'pi' user).
-# Any UID >= 1000 user is enough to suppress Pi OS's first-boot username wizard.
+# Create the byteorder user (auto-assigned UID, locked password).
+# Any UID >= 1000 user suppresses Pi OS's first-boot username wizard.
 useradd --create-home --shell /bin/bash --groups dialout byteorder
 passwd -l byteorder
 
-# Fix ownership now that the user exists
-chown -R byteorder:byteorder /opt/byteorder-print
-chown -R byteorder:byteorder /etc/byteorder
+# ble-print-server venv
+python3 -m venv /opt/ble-print-server/venv
+/opt/ble-print-server/venv/bin/pip install --no-cache-dir \
+  -r /opt/ble-print-server/requirements.txt
 
-uv venv --system-site-packages /opt/byteorder-print/venv
+# pi-printer-client venv
+python3 -m venv /opt/byteorder-printer/venv
+/opt/byteorder-printer/venv/bin/pip install --no-cache-dir \
+  -r /opt/byteorder-printer/requirements.txt
 
-/opt/byteorder-print/venv/bin/uv pip install --no-cache-dir \
-  -r /opt/byteorder-print/requirements-pi.txt
-
-# Disable the first-boot username wizard; enable SSH
+# Disable first-boot username wizard; enable SSH and printer services
 systemctl disable userconfig || true
 systemctl enable ssh
-systemctl enable byteorder-print.service
+systemctl enable byteorder-ble-printer.service
+systemctl enable byteorder-print-client.service
