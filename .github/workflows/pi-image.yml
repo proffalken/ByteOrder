@@ -88,6 +88,9 @@ jobs:
           sudo chmod 750 /mnt/pi/etc/byteorder
           sudo chmod 640 /mnt/pi/etc/byteorder/print-service.env
 
+          # Enable SSH on first boot (headless setup)
+          sudo touch /mnt/pi/boot/firmware/ssh
+
           # Copy install script and QEMU binary into the image, run chroot.
           sudo cp pi-image/scripts/install-chroot.sh /mnt/pi/tmp/install-chroot.sh
           sudo cp /usr/bin/qemu-aarch64-static /mnt/pi/usr/bin/
