@@ -20,6 +20,19 @@ def start_ap(ssid: str) -> None:
     # Ensure WiFi radio is unblocked (Pi OS sometimes soft-blocks on first boot)
     subprocess.run(["rfkill", "unblock", "wifi"], capture_output=True)
 
+    # Set regulatory domain — required before the radio can transmit.
+    # Without this, Pi OS leaves wlan0 "not available" to NetworkManager.
+    subprocess.run(["iw", "reg", "set", "GB"], capture_output=True)
+
+    # Ensure NM is managing wlan0 (may be unmanaged on a fresh image)
+    subprocess.run(
+        ["nmcli", "device", "set", AP_INTERFACE, "managed", "yes"],
+        capture_output=True,
+    )
+
+    import time
+    time.sleep(2)  # Give NM a moment to register the device as available
+
     # Create hotspot
     result = subprocess.run(
         [

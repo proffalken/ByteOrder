@@ -23,6 +23,10 @@ python3 -m venv /opt/byteorder-printer/venv
 /opt/byteorder-printer/venv/bin/pip install --no-cache-dir \
   -r /opt/byteorder-printer/requirements.txt
 
+# Set default WiFi regulatory domain so the radio is usable on first boot
+# (Pi OS leaves wlan0 unavailable until a country code is set)
+echo "REGDOMAIN=GB" > /etc/default/crda
+
 # Disable first-boot username wizard; enable SSH and printer services
 systemctl disable userconfig || true
 systemctl enable ssh
