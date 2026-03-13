@@ -7,7 +7,7 @@ apt-get install -y --no-install-recommends \
   python3-venv python3-pip \
   network-manager \
   bluetooth bluez \
-  rfkill
+  rfkill iw wireless-tools
 
 # Create the byteorder user (auto-assigned UID, locked password).
 # Any UID >= 1000 user suppresses Pi OS's first-boot username wizard.
@@ -23,9 +23,10 @@ python3 -m venv /opt/byteorder-printer/venv
 /opt/byteorder-printer/venv/bin/pip install --no-cache-dir \
   -r /opt/byteorder-printer/requirements.txt
 
-# Set default WiFi regulatory domain so the radio is usable on first boot
-# (Pi OS leaves wlan0 unavailable until a country code is set)
+# Set WiFi regulatory domain persistently via raspi-config and crda.
+# Without a country code, Pi OS leaves wlan0 in 'unavailable' state.
 echo "REGDOMAIN=GB" > /etc/default/crda
+raspi-config nonint do_wifi_country GB
 
 # Disable first-boot username wizard; enable SSH and printer services
 systemctl disable userconfig || true

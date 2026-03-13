@@ -50,8 +50,19 @@ def start_ap(ssid: str) -> None:
         capture_output=True,
     )
 
+    # Wait until NM considers the device available (not rfkill-blocked)
     import time
-    time.sleep(2)  # Give NM a moment to register the device as available
+    for attempt in range(30):
+        state = subprocess.run(
+            ["nmcli", "-t", "-f", "STATE", "device", "show", iface],
+            capture_output=True, text=True,
+        ).stdout
+        log.info("wlan state (attempt %d): %s", attempt + 1, state.strip())
+        if "unavailable" not in state:
+            break
+        time.sleep(1)
+    else:
+        raise RuntimeError(f"Device {iface} still unavailable after 30s")
 
     # Create hotspot
     result = subprocess.run(
