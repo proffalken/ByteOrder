@@ -50,7 +50,9 @@ def start_ap(ssid: str) -> None:
         capture_output=True,
     )
 
-    # Wait until NM considers the device available (not rfkill-blocked)
+    # Wait until NM considers the device ready (disconnected).
+    # "deactivating" means a previous AP is still tearing down;
+    # "unavailable" means rfkill or regulatory domain not yet applied.
     import time
     for attempt in range(30):
         state = subprocess.run(
@@ -58,11 +60,11 @@ def start_ap(ssid: str) -> None:
             capture_output=True, text=True,
         ).stdout
         log.info("wlan state (attempt %d): %s", attempt + 1, state.strip())
-        if "unavailable" not in state:
+        if "disconnected" in state:
             break
         time.sleep(1)
     else:
-        raise RuntimeError(f"Device {iface} still unavailable after 30s")
+        raise RuntimeError(f"Device {iface} did not reach disconnected state after 30s")
 
     # Create hotspot
     result = subprocess.run(
@@ -82,7 +84,7 @@ def start_ap(ssid: str) -> None:
     # Install captive-portal DNS redirect so iOS/Android detect the portal
     _install_dns_redirect()
 
-    log.info("AP '%s' started on %s", ssid, AP_INTERFACE)
+    log.info("AP '%s' started on %s", ssid, iface)
 
 
 def stop_ap() -> None:
