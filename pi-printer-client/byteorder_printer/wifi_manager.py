@@ -5,11 +5,38 @@ import logging
 log = logging.getLogger(__name__)
 
 CONNECT_TIMEOUT = 30  # seconds to wait for association
+SCAN_TIMEOUT = 20     # seconds to wait for SSID to appear in scan results
+
+
+def _find_wifi_interface() -> str:
+    from .ap_manager import _find_wifi_interface as _find
+    return _find()
+
+
+def _scan_for_ssid(iface: str, ssid: str) -> bool:
+    """Trigger a rescan and poll until the target SSID appears or timeout."""
+    subprocess.run(
+        ["nmcli", "device", "wifi", "rescan", "ifname", iface],
+        capture_output=True,
+    )
+    for _ in range(SCAN_TIMEOUT):
+        time.sleep(1)
+        out = subprocess.run(
+            ["nmcli", "-t", "-f", "DEVICE,SSID", "device", "wifi", "list", "ifname", iface],
+            capture_output=True, text=True,
+        ).stdout
+        for line in out.splitlines():
+            if line.startswith(f"{iface}:") and line.split(":", 1)[1].strip() == ssid:
+                log.info("SSID '%s' found in scan", ssid)
+                return True
+    log.warning("SSID '%s' not seen after %ds — attempting connect anyway", ssid, SCAN_TIMEOUT)
+    return False
 
 
 def connect(ssid: str, psk: str) -> bool:
     """
-    Connect wlan0 to the given SSID using NetworkManager (nmcli).
+    Connect to the given SSID using NetworkManager (nmcli).
+    Rescans first so NM knows the network exists before trying to connect.
     Returns True on success, False if the connection fails or times out.
     """
     conn_name = f"byteorder-{ssid}"
@@ -20,11 +47,13 @@ def connect(ssid: str, psk: str) -> bool:
         capture_output=True,
     )
 
-    from .ap_manager import _find_wifi_interface
     try:
         iface = _find_wifi_interface()
     except RuntimeError:
         iface = "wlan0"
+
+    # Scan first — on boot NM may not have seen the network yet
+    _scan_for_ssid(iface, ssid)
 
     # Add and activate the connection
     result = subprocess.run(
