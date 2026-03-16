@@ -45,8 +45,6 @@ def _mock_sse_response(events_data):
 
 def test_run_sleeps_after_clean_stream_end():
     """If the SSE stream ends without an exception, still sleep before reconnecting."""
-    sleep_calls = []
-
     # First iteration: stream ends cleanly. Second: raise to exit the loop.
     call_count = 0
 
@@ -69,6 +67,7 @@ def test_run_sleeps_after_clean_stream_end():
         try:
             run("http://test", "AA:BB:CC:DD:EE:FF")
         except KeyboardInterrupt:
+            # Expected: used to break out of run()'s infinite loop during testing.
             pass
 
     # sleep must have been called after the clean stream end
@@ -93,6 +92,7 @@ def test_run_sleeps_after_connection_error():
         try:
             run("http://test", "AA:BB:CC:DD:EE:FF")
         except KeyboardInterrupt:
+            # Expected: used to break out of run()'s infinite loop during testing.
             pass
 
     mock_time.sleep.assert_called()
