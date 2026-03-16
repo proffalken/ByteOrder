@@ -70,17 +70,27 @@ def start_ap(ssid: str) -> None:
     else:
         raise RuntimeError(f"Device {iface} did not reach ready state after 30s (last: {iface_state})")
 
-    # Create hotspot
+    # Create an open (no password) AP connection profile
     result = subprocess.run(
         [
-            "nmcli", "device", "wifi", "hotspot",
+            "nmcli", "connection", "add",
+            "type", "wifi",
             "ifname", iface,
             "con-name", AP_CONN_NAME,
             "ssid", ssid,
-            "band", "bg",
+            "802-11-wireless.mode", "ap",
+            "802-11-wireless.band", "bg",
+            "ipv4.method", "shared",
+            "connection.autoconnect", "no",
         ],
-        capture_output=True,
-        text=True,
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Failed to create AP profile: {result.stderr.strip()}")
+
+    result = subprocess.run(
+        ["nmcli", "connection", "up", AP_CONN_NAME],
+        capture_output=True, text=True,
     )
     if result.returncode != 0:
         raise RuntimeError(f"Failed to start AP: {result.stderr.strip()}")
