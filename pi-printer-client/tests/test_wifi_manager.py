@@ -1,4 +1,4 @@
-from unittest.mock import call, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from byteorder_printer import wifi_manager
 
 
