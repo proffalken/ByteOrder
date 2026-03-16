@@ -69,6 +69,7 @@ class OrderStatusUpdate(BaseModel):
 
 class PrinterRegistration(BaseModel):
     mac_address: str
+    ip_address: Optional[str] = None
 
 
 class PrinterClaim(BaseModel):
@@ -85,6 +86,7 @@ class PrinterDeviceOut(BaseModel):
     mac_address: str
     claim_code: str
     name: Optional[str]
+    ip_address: Optional[str]
     kitchen_id: Optional[str]
     registered_at: datetime
     claimed_at: Optional[datetime]

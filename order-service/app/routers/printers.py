@@ -38,10 +38,13 @@ def register_printer(data: schemas.PrinterRegistration, db: Session = Depends(ge
     device = _get_printer_by_mac(mac, db)
     if device:
         device.last_seen_at = datetime.utcnow()
+        if data.ip_address:
+            device.ip_address = data.ip_address
     else:
         device = models.PrinterDevice(
             mac_address=mac,
             claim_code=claim_code,
+            ip_address=data.ip_address,
         )
         db.add(device)
 

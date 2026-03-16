@@ -44,12 +44,12 @@ def _wait_for_ntp(timeout: int = 60) -> None:
 def _register(api_base: str, mac: str) -> bool:
     """POST /orders/printers/register — idempotent. Returns True on success."""
     import requests
-    from .mac_utils import derive_claim_code
+    from .mac_utils import derive_claim_code, get_ip
 
     try:
         resp = requests.post(
             f"{api_base}/orders/printers/register",
-            json={"mac_address": mac, "claim_code": derive_claim_code(mac)},
+            json={"mac_address": mac, "claim_code": derive_claim_code(mac), "ip_address": get_ip()},
             timeout=10,
         )
         resp.raise_for_status()

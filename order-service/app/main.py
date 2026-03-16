@@ -61,7 +61,7 @@ def _run_migrations():
                 END IF;
             END $$
         """))
-        # printer_devices — created by Base.metadata.create_all, no ALTER needed
+        conn.execute(text("ALTER TABLE printer_devices ADD COLUMN IF NOT EXISTS ip_address VARCHAR"))
         conn.commit()
 
 
