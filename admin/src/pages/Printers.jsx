@@ -79,7 +79,7 @@ export default function Printers() {
               <div key={p.id} className="flex items-center justify-between border rounded-lg px-4 py-3">
                 <div>
                   <p className="font-medium text-brand-text">{p.name || 'Unnamed Printer'}</p>
-                  <p className="text-xs text-gray-400 font-mono">{p.mac_address}</p>
+                  <p className="text-xs text-gray-400 font-mono">{p.mac_address}{p.ip_address && ` · ${p.ip_address}`}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Last seen: {formatLastSeen(p.last_seen_at)}</p>
                 </div>
                 <div className="flex items-center gap-3">

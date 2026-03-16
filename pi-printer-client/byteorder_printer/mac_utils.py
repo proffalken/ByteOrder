@@ -19,3 +19,16 @@ def get_mac(interface: str = "wlan0") -> str:
 def derive_claim_code(mac: str) -> str:
     """Return last 6 hex chars of MAC (no colons), uppercased — e.g. 'A1B2C3'."""
     return mac.replace(":", "")[-6:].upper()
+
+
+def get_ip(interface: str = "wlan0") -> str | None:
+    """Return the IPv4 address of the given interface, or None if not available."""
+    try:
+        with open(f"/sys/class/net/{interface}/operstate") as f:
+            if f.read().strip() != "up":
+                return None
+        out = subprocess.check_output(["ip", "-4", "addr", "show", interface], text=True)
+        m = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", out)
+        return m.group(1) if m else None
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None

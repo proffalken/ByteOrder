@@ -56,6 +56,7 @@ class PrinterDevice(Base):
     claim_code = Column(String, nullable=False, index=True)   # last 6 hex chars of MAC, uppercase
     kitchen_id = Column(String, nullable=True, index=True)    # set when claimed
     name = Column(String, nullable=True)
+    ip_address = Column(String, nullable=True)
     registered_at = Column(DateTime, default=datetime.utcnow)
     claimed_at = Column(DateTime, nullable=True)
     last_seen_at = Column(DateTime, nullable=True)
